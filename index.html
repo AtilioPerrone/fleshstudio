@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Flesh Studio — Grabamos terrenos en 360°. Perfiles inmersivos de vendedores. Cada metro, real." />
+<title>Flesh Studio — Terrenos en 360°</title>
+<link rel="icon" type="image/png" href="Logos_principales__1_.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@300;400;500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<style>
+  /* =========================================================
+     TOKENS & RESET
+     ========================================================= */
+  :root{
+    --orange-vibrant:#FF6B00;
+    --orange-intense:#FF3D00;
+    --orange-amber:#FF9A3C;
+    --orange-burnt:#C44A00;
+    --orange-deep:#8B3300;
+    --black-void:#0A0A0A;
+    --black-coal:#111111;
+    --black-carbon:#1A1A1A;
+    --black-smoke:#242424;
+    --white-pure:#FFFFFF;
+    --white-ash:#F5F5F5;
+    --white-stone:#E8E8E8;
+    --cream:#E8E3DA;
+    --lime:#B5FF3D;
+    --display:'Anton', 'Bebas Neue', sans-serif;
+    --body:'DM Sans', 'Barlow', sans-serif;
+    --body-condensed:'Barlow', sans-serif;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  body{
+    font-family:var(--body);
+    background:var(--black-void);
+    color:var(--white-ash);
+    line-height:1.6;
+    overflow-x:hidden;
+    cursor:none;
+  }
+  @media (pointer:coarse), (max-width:900px){
+    body{cursor:auto}
+  }
+
+  img{display:block;max-width:100%;height:auto}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+  input,textarea,select{font-family:inherit}
+
+  ::selection{background:var(--orange-intense);color:var(--black-void)}
+
+  /* Noise/grain overlay global */
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity:.08;
+    pointer-events:none;
+    z-index:9998;
+    mix-blend-mode:overlay;
+  }
+
+  /* =========================================================
+     CURSOR PERSONALIZADO
+     ========================================================= */
+  .cursor-dot,.cursor-ring{
+    position:fixed;top:0;left:0;
+    pointer-events:none;
+    z-index:10000;
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    will-change:transform;
+  }
+  .cursor-dot{
+    width:6px;height:6px;
+    background:var(--orange-intense);
+    transition:transform .15s ease, background .2s ease;
+  }
+  .cursor-ring{
+    width:36px;height:36px;
+    border:1.5px solid var(--orange-intense);
+    transition:transform .25s ease, width .25s ease, height .25s ease, border-color .25s ease;
+    mix-blend-mode:difference;
+  }
+  body.cursor-hover .cursor-ring{
+    width:64px;height:64px;border-color:var(--orange-amber);
+  }
+  body.cursor-hover .cursor-dot{transform:translate(-50%,-50%) scale(0)}
+
+  @media (pointer:coarse), (max-width:900px){
+    .cursor-dot,.cursor-ring{display:none}
+  }
+
+  /* =========================================================
+     NAVBAR
+     ========================================================= */
+  .navbar{
+    position:fixed;top:0;left:0;right:0;
+    z-index:1000;
+    padding:18px 40px;
+    display:flex;align-items:center;justify-content:space-between;
+    background:rgba(10,10,10,.35);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,107,0,0);
+    transition:background .3s ease, border-color .3s ease, padding .3s ease;
+  }
+  .navbar.scrolled{
+    background:rgba(10,10,10,.92);
+    border-bottom-color:rgba(255,107,0,.15);
+    padding:12px 40px;
+  }
+  .nav-logo img{height:36px;width:auto;display:block}
+  .nav-links{
+    display:flex;gap:40px;align-items:center;
+    list-style:none;
+  }
+  .nav-links a{
+    font-family:var(--display);
+    font-size:17px;
+    letter-spacing:3px;
+    position:relative;
+    padding:6px 0;
+    text-transform:uppercase;
+    color:var(--white-ash);
+    transition:color .2s ease;
+  }
+  .nav-links a::after{
+    content:"";
+    position:absolute;left:0;bottom:0;
+    width:0;height:2px;
+    background:var(--orange-intense);
+    transition:width .3s cubic-bezier(.22,1,.36,1);
+  }
+  .nav-links a:hover,.nav-links a.active{color:var(--orange-intense)}
+  .nav-links a:hover::after,.nav-links a.active::after{width:100%}
+
+  .nav-cta{
+    font-family:var(--display);
+    letter-spacing:2px;
+    font-size:14px;
+    padding:10px 22px;
+    background:var(--orange-intense);
+    color:var(--black-void);
+    border-radius:2px;
+    transition:background .2s ease, transform .2s ease;
+    text-transform:uppercase;
+  }
+  .nav-cta:hover{background:var(--orange-amber);transform:translateY(-2px)}
+
+  .hamburger{
+    display:none;
+    width:42px;height:42px;
+    position:relative;
+    z-index:1100;
+  }
+  .hamburger span{
+    position:absolute;left:9px;right:9px;height:2px;
+    background:var(--orange-intense);
+    transition:transform .3s ease, opacity .2s ease, top .3s ease;
+  }
+  .hamburger span:nth-child(1){top:14px}
+  .hamburger span:nth-child(2){top:20px}
+  .hamburger span:nth-child(3){top:26px}
+  .hamburger.open span:nth-child(1){top:20px;transform:rotate(45deg)}
+  .hamburger.open span:nth-child(2){opacity:0}
+  .hamburger.open span:nth-child(3){top:20px;transform:rotate(-45deg)}
+
+  @media (max-width:900px){
+    .navbar{padding:14px 20px}
+    .navbar.scrolled{padding:10px 20px}
+    .hamburger{display:block}
+    .nav-links,.nav-cta{display:none}
+    .mobile-panel{
+      position:fixed;top:0;right:0;bottom:0;
+      width:min(80vw,340px);
+      background:var(--black-coal);
+      border-left:1px solid rgba(255,107,0,.2);
+      padding:100px 30px 40px;
+      transform:translateX(100%);
+      transition:transform .4s cubic-bezier(.22,1,.36,1);
+      z-index:1050;
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .mobile-panel.open{transform:translateX(0)}
+    .mobile-panel .mobile-mark{
+      position:absolute;bottom:30px;left:30px;
+      width:60px;height:auto;opacity:.5;
+    }
+    .mobile-panel a{
+      font-family:var(--display);
+      letter-spacing:3px;
+      font-size:28px;
+      padding:18px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      color:var(--white-ash);
+      text-transform:uppercase;
+    }
+    .mobile-panel a:hover{color:var(--orange-intense)}
+    .mobile-panel .nav-cta{
+      display:inline-block;
+      margin-top:30px;
+      text-align:center;
+    }
+    .mobile-backdrop{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.7);
+      z-index:1040;
+      opacity:0;pointer-events:none;
+      transition:opacity .3s ease;
+    }
+    .mobile-backdrop.open{opacity:1;pointer-events:auto}
+  }
+  @media (min-width:901px){
+    .mobile-panel,.mobile-backdrop{display:none}
+  }
+
+  /* =========================================================
+     HERO
+     ========================================================= */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    padding:140px 40px 80px;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,61,0,.12), transparent 55%),
+      radial-gradient(ellipse at 80% 90%, rgba(196,74,0,.10), transparent 55%),
+      var(--black-void);
+  }
+  /* Patrón de puntos SVG */
+  .hero::before{
+    content:"";
+    position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size:32px 32px;
+    mask-image:linear-gradient(to bottom, black 30%, transparent 90%);
+    -webkit-mask-image:linear-gradient(to bottom, black 30%, transparent 90%);
+    pointer-events:none;
+  }
+
+  /* Rayos decorativos flotantes */
+  .hero-bolt{
+    position:absolute;
+    right:-60px;top:80px;
+    width:460px;height:auto;
+    opacity:.18;
+    transform:rotate(14deg);
+    filter:drop-shadow(0 0 60px rgba(255,61,0,.3));
+    pointer-events:none;
+    animation:float-bolt 9s ease-in-out infinite;
+    z-index:1;
+  }
+  .hero-bolt-2{
+    position:absolute;
+    left:-80px;bottom:-40px;
+    width:280px;height:auto;
+    opacity:.08;
+    transform:rotate(-25deg) scaleX(-1);
+    pointer-events:none;
+    z-index:1;
+  }
+  @keyframes float-bolt{
+    0%,100%{transform:rotate(14deg) translateY(0)}
+    50%{transform:rotate(11deg) translateY(-20px)}
+  }
+
+  .hero-inner{
+    max-width:1400px;margin:0 auto;
+    position:relative;z-index:2;
+    display:grid;
+    grid-template-columns:1.2fr 1fr;
+    gap:60px;
+    align-items:center;
+  }
+
+  .hero-eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family:var(--body-condensed);
+    font-weight:600;
+    font-size:12px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:var(--orange-amber);
+    margin-bottom:24px;
+    padding:8px 16px;
+    border:1px solid rgba(255,154,60,.3);
+    border-radius:2px;
+    background:rgba(255,61,0,.05);
+  }
+  .pulse-dot{
+    display:inline-block;
+    width:8px;height:8px;border-radius:50%;
+    background:var(--lime);
+    box-shadow:0 0 10px var(--lime);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:.4;transform:scale(.85)}
+  }
+
+  .hero-title{
+    font-family:var(--display);
+    font-size:clamp(72px, 16vw, 240px);
+    line-height:.82;
+    letter-spacing:-.02em;
+    color:var(--white-pure);
+    margin-bottom:20px;
+    position:relative;
+  }
+  .hero-title .accent{
+    color:var(--orange-intense);
+    display:inline-block;
+    text-shadow:0 0 40px rgba(255,61,0,.4);
+  }
+  .hero-title .slash{
+    display:inline-block;
+    color:var(--orange-intense);
+    transform:translateY(-.05em);
+    margin:0 .02em;
+  }
+
+  .hero-subtitle{
+    font-family:var(--body);
+    font-size:clamp(16px, 1.6vw, 20px);
+    max-width:520px;
+    color:var(--white-stone);
+    margin-bottom:38px;
+    line-height:1.5;
+  }
+  .hero-subtitle strong{color:var(--orange-amber);font-weight:500}
+
+  .hero-actions{
+    display:flex;gap:16px;flex-wrap:wrap;
+  }
+  .btn-primary{
+    font-family:var(--display);
+    letter-spacing:3px;font-size:16px;
+    padding:18px 32px;
+    background:var(--orange-intense);
+    color:var(--black-void);
+    border-radius:2px;
+    text-transform:uppercase;
+    position:relative;overflow:hidden;
+    transition:transform .25s ease;
+    display:inline-flex;align-items:center;gap:12px;
+  }
+  .btn-primary::after{
+    content:"";
+    position:absolute;inset:0;
+    background:var(--orange-amber);
+    transform:translateX(-100%);
+    transition:transform .3s cubic-bezier(.22,1,.36,1);
+    z-index:-1;
+  }
+  .btn-primary:hover::after{transform:translateX(0)}
+  .btn-primary:hover{transform:translateY(-3px)}
+  .btn-primary .arrow{transition:transform .25s ease}
+  .btn-primary:hover .arrow{transform:translateX(6px)}
+
+  .btn-outline{
+    font-family:var(--display);
+    letter-spacing:3px;font-size:16px;
+    padding:18px 32px;
+    border:1.5px solid var(--white-stone);
+    color:var(--white-ash);
+    border-radius:2px;
+    text-transform:uppercase;
+    transition:all .25s ease;
+  }
+  .btn-outline:hover{
+    border-color:var(--orange-intense);
+    color:var(--orange-intense);
+    transform:translateY(-3px);
+  }
+
+  /* Visor 360° */
+  .hero-viewer{
+    position:relative;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    background:
+      radial-gradient(circle at 30% 30%, var(--orange-amber), transparent 40%),
+      radial-gradient(circle at 70% 70%, var(--orange-burnt), transparent 45%),
+      radial-gradient(circle at center, var(--orange-intense) 0%, var(--black-void) 70%);
+    box-shadow:
+      0 0 0 2px rgba(255,61,0,.3),
+      0 0 80px rgba(255,61,0,.35),
+      inset 0 0 60px rgba(0,0,0,.6);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    animation:rotate-lens 30s linear infinite;
+  }
+  @keyframes rotate-lens{
+    to{transform:rotate(360deg)}
+  }
+  .viewer-content{
+    animation:rotate-lens 30s linear infinite reverse;
+    text-align:center;
+    color:var(--white-pure);
+    padding:30px;
+  }
+  .viewer-360{
+    font-family:var(--display);
+    font-size:clamp(64px, 10vw, 110px);
+    line-height:1;
+    letter-spacing:-.04em;
+    text-shadow:0 4px 30px rgba(0,0,0,.6);
+  }
+  .viewer-label{
+    font-family:var(--body-condensed);
+    text-transform:uppercase;
+    letter-spacing:5px;
+    font-size:11px;
+    margin-top:12px;
+    color:var(--white-ash);
+    font-weight:600;
+  }
+  .viewer-rings{
+    position:absolute;inset:-20px;
+    border-radius:50%;
+    border:1px dashed rgba(255,154,60,.4);
+    animation:rotate-lens 40s linear infinite reverse;
+  }
+  .viewer-rings::before{
+    content:"";
+    position:absolute;inset:20px;
+    border-radius:50%;
+    border:1px solid rgba(255,154,60,.2);
+  }
+
+  /* Hero ticker (franja inferior) */
+  .hero-ticker{
+    position:absolute;left:0;right:0;bottom:0;
+    overflow:hidden;
+    background:var(--orange-intense);
+    color:var(--black-void);
+    border-top:2px solid var(--black-void);
+    border-bottom:2px solid var(--black-void);
+    padding:14px 0;
+    z-index:3;
+  }
+  .ticker-track{
+    display:flex;gap:60px;
+    white-space:nowrap;
+    animation:ticker 30s linear infinite;
+    font-family:var(--display);
+    letter-spacing:4px;
+    font-size:18px;
+    text-transform:uppercase;
+  }
+  .ticker-track span{display:inline-flex;align-items:center;gap:20px}
+  .ticker-track span::after{content:"◆";font-size:12px}
+  @keyframes ticker{
+    from{transform:translateX(0)}
+    to{transform:translateX(-50%)}
+  }
+
+  @media (max-width:900px){
+    .hero{padding:120px 20px 100px}
+    .hero-inner{grid-template-columns:1fr;gap:40px}
+    .hero-viewer{max-width:340px;margin:0 auto}
+    .hero-bolt{width:280px;opacity:.12;right:-100px}
+  }
+
+  /* =========================================================
+     SECCIÓN: ¿QUÉ ES FLESH?
+     ========================================================= */
+  .section{
+    padding:120px 40px;
+    position:relative;
+  }
+  .section-inner{max-width:1400px;margin:0 auto;position:relative}
+
+  .section-header{
+    margin-bottom:80px;
+    max-width:800px;
+  }
+  .section-kicker{
+    display:inline-flex;align-items:center;gap:12px;
+    font-family:var(--body-condensed);
+    font-weight:600;
+    font-size:12px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:var(--orange-intense);
+    margin-bottom:18px;
+  }
+  .section-kicker::before{
+    content:"";
+    width:40px;height:2px;background:var(--orange-intense);
+  }
+  .section-title{
+    font-family:var(--display);
+    font-size:clamp(48px, 8vw, 110px);
+    line-height:.92;
+    letter-spacing:-.02em;
+    color:var(--white-pure);
+  }
+  .section-title .mark{color:var(--orange-intense)}
+  .section-lead{
+    margin-top:20px;
+    font-size:clamp(15px, 1.4vw, 18px);
+    color:var(--white-stone);
+    max-width:620px;
+  }
+
+  .what-is{
+    background:var(--black-carbon);
+    border-top:1px solid rgba(255,255,255,.05);
+    border-bottom:1px solid rgba(255,255,255,.05);
+  }
+  .what-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:30px;
+  }
+  .what-card{
+    position:relative;
+    background:var(--black-coal);
+    border:1px solid rgba(255,255,255,.06);
+    padding:40px 32px 36px;
+    transition:border-color .3s ease, transform .3s ease;
+    overflow:hidden;
+  }
+  .what-card::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;
+    height:2px;
+    background:var(--orange-intense);
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform .4s cubic-bezier(.22,1,.36,1);
+  }
+  .what-card:hover{border-color:rgba(255,61,0,.25);transform:translateY(-4px)}
+  .what-card:hover::before{transform:scaleX(1)}
+
+  .what-number{
+    font-family:var(--display);
+    font-size:64px;line-height:1;
+    color:rgba(255,61,0,.2);
+    margin-bottom:18px;
+  }
+  .what-icon{
+    width:56px;height:56px;
+    margin-bottom:20px;
+    color:var(--orange-intense);
+  }
+  .what-title{
+    font-family:var(--display);
+    font-size:28px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--white-pure);
+    margin-bottom:12px;
+  }
+  .what-text{
+    color:var(--white-stone);
+    font-size:15px;
+    line-height:1.6;
+  }
+
+  /* Bolt decorator */
+  .section-bolt{
+    position:absolute;
+    pointer-events:none;
+    opacity:.06;
+    width:420px;height:auto;
+  }
+  .section-bolt.left{left:-100px;top:40px;transform:rotate(-18deg)}
+  .section-bolt.right{right:-80px;bottom:40px;transform:rotate(16deg)}
+
+  @media (max-width:900px){
+    .section{padding:80px 20px}
+    .what-grid{grid-template-columns:1fr;gap:16px}
+    .section-bolt{width:220px}
+  }
+
+  /* =========================================================
+     PREVIEW PROPIEDADES (editorial layout)
+     ========================================================= */
+  .preview-grid{
+    display:grid;
+    grid-template-columns:1.4fr 1fr;
+    grid-template-rows:auto auto;
+    gap:24px;
+  }
+  .preview-card{
+    position:relative;
+    overflow:hidden;
+    background:var(--black-carbon);
+    border:1px solid rgba(255,255,255,.06);
+    min-height:320px;
+    transition:transform .3s ease;
+  }
+  .preview-card.big{
+    grid-row:span 2;
+    min-height:680px;
+  }
+  .preview-card img{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    object-fit:cover;
+    transition:transform .7s cubic-bezier(.22,1,.36,1), filter .5s ease;
+    filter:grayscale(30%) brightness(.7);
+  }
+  .preview-card:hover img{
+    transform:scale(1.08);
+    filter:grayscale(0%) brightness(.85);
+  }
+  .preview-card::after{
+    content:"";
+    position:absolute;inset:0;
+    background:linear-gradient(180deg, transparent 40%, rgba(10,10,10,.95) 100%);
+    transition:background .4s ease;
+  }
+  .preview-card:hover::after{
+    background:linear-gradient(180deg, rgba(255,61,0,.1) 0%, rgba(10,10,10,.95) 100%);
+  }
+  .preview-content{
+    position:absolute;inset:auto 0 0 0;
+    padding:32px;
+    z-index:2;
+    color:var(--white-pure);
+  }
+  .preview-badge{
+    display:inline-block;
+    font-family:var(--display);
+    letter-spacing:3px;
+    font-size:14px;
+    padding:6px 14px;
+    background:var(--orange-intense);
+    color:var(--black-void);
+    margin-bottom:16px;
+  }
+  .preview-title{
+    font-family:var(--display);
+    font-size:clamp(24px, 3vw, 36px);
+    line-height:1;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .preview-meta{
+    font-family:var(--body-condensed);
+    font-size:14px;
+    color:var(--white-stone);
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    margin-bottom:18px;
+  }
+  .preview-link{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family:var(--display);
+    letter-spacing:2px;
+    font-size:14px;
+    color:var(--orange-amber);
+    padding-bottom:4px;
+    border-bottom:1px solid var(--orange-amber);
+    transition:gap .25s ease, color .25s ease;
+  }
+  .preview-link:hover{gap:16px;color:var(--orange-intense)}
+
+  @media (max-width:900px){
+    .preview-grid{grid-template-columns:1fr}
+    .preview-card.big{grid-row:auto;min-height:380px}
+    .preview-card{min-height:300px}
+  }
+
+  /* =========================================================
+     ESTADÍSTICAS
+     ========================================================= */
+  .stats{
+    background:var(--black-void);
+    padding:100px 40px;
+    border-top:1px solid rgba(255,61,0,.15);
+    border-bottom:1px solid rgba(255,61,0,.15);
+    position:relative;
+    overflow:hidden;
+  }
+  .stats-grid{
+    max-width:1200px;margin:0 auto;
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:30px;
+    position:relative;z-index:2;
+  }
+  .stat{
+    text-align:center;
+    position:relative;
+    padding:20px;
+  }
+  .stat:not(:last-child)::after{
+    content:"";
+    position:absolute;
+    top:20%;right:-15px;
+    width:1px;height:60%;
+    background:rgba(255,255,255,.08);
+  }
+  .stat-num{
+    font-family:var(--display);
+    font-size:clamp(80px, 14vw, 180px);
+    line-height:.9;
+    letter-spacing:-.04em;
+    background:linear-gradient(180deg, var(--orange-amber) 0%, var(--orange-intense) 60%, var(--orange-burnt) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    color:transparent;
+    margin-bottom:10px;
+    text-shadow:0 0 40px rgba(255,61,0,.2);
+  }
+  .stat-label{
+    font-family:var(--body-condensed);
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--white-stone);
+  }
+
+  @media (max-width:900px){
+    .stats{padding:60px 20px}
+    .stats-grid{grid-template-columns:1fr;gap:40px}
+    .stat:not(:last-child)::after{
+      top:auto;right:20%;bottom:-20px;left:20%;
+      width:auto;height:1px;
+    }
+  }
+
+  /* =========================================================
+     PERFILES
+     ========================================================= */
+  .profiles{
+    background:var(--black-coal);
+    padding:120px 40px;
+  }
+
+  .filters{
+    display:flex;gap:10px;flex-wrap:wrap;
+    margin-bottom:50px;
+  }
+  .filter-btn{
+    font-family:var(--display);
+    letter-spacing:3px;
+    font-size:13px;
+    padding:12px 22px;
+    color:var(--white-stone);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:2px;
+    text-transform:uppercase;
+    transition:all .25s ease;
+  }
+  .filter-btn:hover{
+    border-color:var(--orange-intense);
+    color:var(--orange-intense);
+  }
+  .filter-btn.active{
+    background:var(--orange-intense);
+    border-color:var(--orange-intense);
+    color:var(--black-void);
+  }
+
+  .profiles-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:28px;
+  }
+  @media (max-width:1024px){
+    .profiles-grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:640px){
+    .profiles-grid{grid-template-columns:1fr}
+    .profiles{padding:80px 20px}
+  }
+
+  .profile-card{
+    position:relative;
+    background:var(--black-carbon);
+    border:1px solid rgba(255,255,255,.06);
+    overflow:hidden;
+    transition:all .35s cubic-bezier(.22,1,.36,1);
+    display:flex;flex-direction:column;
+  }
+  .profile-card:hover{
+    transform:translateY(-8px) scale(1.02);
+    border-color:rgba(255,61,0,.4);
+    box-shadow:0 20px 60px -10px rgba(255,107,0,.35), 0 0 0 1px rgba(255,61,0,.2);
+  }
+  .profile-card.hidden{
+    opacity:0;pointer-events:none;
+    transform:scale(.95);
+    max-height:0;margin:0;padding:0;border:0;
+    overflow:hidden;
+  }
+
+  .profile-viewer{
+    position:relative;
+    aspect-ratio:16/10;
+    background:
+      radial-gradient(ellipse at 70% 30%, var(--orange-amber), transparent 50%),
+      radial-gradient(ellipse at 30% 70%, var(--orange-burnt), transparent 55%),
+      linear-gradient(135deg, var(--black-smoke), var(--black-void));
+    overflow:hidden;
+  }
+  .profile-viewer::before{
+    content:"";
+    position:absolute;inset:0;
+    background-image:radial-gradient(circle at center, transparent 40%, rgba(0,0,0,.6) 100%);
+  }
+  .profile-viewer .dots{
+    position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px);
+    background-size:18px 18px;
+    opacity:.6;
+  }
+  .viewer-icon-360{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--white-pure);
+    z-index:2;
+  }
+  .viewer-icon-360 svg{
+    width:56px;height:auto;
+    filter:drop-shadow(0 4px 20px rgba(0,0,0,.6));
+  }
+  .status-badge{
+    position:absolute;top:14px;right:14px;
+    font-family:var(--body-condensed);
+    font-weight:700;
+    letter-spacing:2px;
+    font-size:10px;
+    padding:6px 10px;
+    border-radius:2px;
+    text-transform:uppercase;
+    z-index:3;
+  }
+  .status-badge.available{
+    background:var(--lime);color:var(--black-void);
+  }
+  .status-badge.reserved{
+    background:rgba(255,61,0,.15);
+    color:var(--orange-amber);
+    border:1px solid rgba(255,154,60,.4);
+  }
+  .profile-watermark{
+    position:absolute;bottom:12px;left:14px;
+    height:22px;width:auto;
+    opacity:.5;z-index:3;
+    filter:brightness(1.3);
+  }
+
+  .profile-body{
+    padding:24px 22px 22px;
+    display:flex;flex-direction:column;gap:14px;
+    flex:1;
+  }
+  .profile-head{
+    display:flex;align-items:center;gap:14px;
+  }
+  .profile-avatar{
+    width:52px;height:52px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid var(--orange-intense);
+  }
+  .profile-identity h3{
+    font-family:var(--display);
+    font-size:22px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--white-pure);
+    line-height:1;
+    margin-bottom:4px;
+  }
+  .profile-identity .loc{
+    font-family:var(--body-condensed);
+    font-size:13px;
+    color:var(--white-stone);
+    letter-spacing:1px;
+  }
+
+  .profile-stats{
+    display:flex;gap:20px;
+    padding:14px 0;
+    border-top:1px solid rgba(255,255,255,.06);
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .profile-stat{flex:1}
+  .profile-stat .label{
+    font-family:var(--body-condensed);
+    font-size:10px;
+    letter-spacing:2px;
+    color:var(--white-stone);
+    text-transform:uppercase;
+    margin-bottom:4px;
+    opacity:.7;
+  }
+  .profile-stat .value{
+    font-family:var(--display);
+    font-size:22px;
+    color:var(--orange-amber);
+    letter-spacing:.5px;
+  }
+
+  .profile-cta{
+    margin-top:auto;
+    font-family:var(--display);
+    letter-spacing:2px;
+    font-size:14px;
+    padding:14px;
+    background:transparent;
+    border:1px solid rgba(255,61,0,.4);
+    color:var(--orange-intense);
+    text-transform:uppercase;
+    transition:all .25s ease;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .profile-cta:hover{
+    background:var(--orange-intense);
+    color:var(--black-void);
+  }
+  .profile-cta .arrow{transition:transform .25s ease}
+  .profile-cta:hover .arrow{transform:translateX(4px)}
+
+  /* =========================================================
+     MODAL
+     ========================================================= */
+  .modal-backdrop{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.82);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    z-index:2000;
+    opacity:0;pointer-events:none;
+    transition:opacity .3s ease;
+    display:flex;align-items:center;justify-content:center;
+    padding:30px;
+  }
+  .modal-backdrop.open{opacity:1;pointer-events:auto}
+  .modal{
+    background:var(--black-carbon);
+    border:1px solid rgba(255,61,0,.3);
+    max-width:960px;width:100%;
+    max-height:90vh;
+    overflow-y:auto;
+    transform:scale(.9);
+    transition:transform .35s cubic-bezier(.22,1,.36,1);
+    position:relative;
+  }
+  .modal-backdrop.open .modal{transform:scale(1)}
+  .modal-close{
+    position:absolute;top:18px;right:18px;
+    width:42px;height:42px;
+    background:var(--black-void);
+    color:var(--orange-intense);
+    border:1px solid rgba(255,61,0,.3);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;
+    z-index:5;
+    transition:all .2s ease;
+  }
+  .modal-close:hover{
+    background:var(--orange-intense);
+    color:var(--black-void);
+    transform:rotate(90deg);
+  }
+  .modal-header{
+    padding:36px 40px 28px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    display:flex;gap:24px;align-items:center;
+  }
+  .modal-avatar{
+    width:80px;height:80px;
+    border-radius:50%;
+    border:3px solid var(--orange-intense);
+    object-fit:cover;
+  }
+  .modal-header h2{
+    font-family:var(--display);
+    font-size:clamp(32px, 4vw, 48px);
+    letter-spacing:1px;
+    color:var(--white-pure);
+    text-transform:uppercase;
+    line-height:1;
+    margin-bottom:6px;
+  }
+  .modal-header .loc{
+    font-family:var(--body-condensed);
+    color:var(--orange-amber);
+    letter-spacing:2px;
+    text-transform:uppercase;
+    font-size:14px;
+  }
+  .modal-body{padding:32px 40px}
+  .modal-body p{
+    color:var(--white-stone);
+    margin-bottom:24px;
+    font-size:16px;
+  }
+  .modal-info{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:20px;margin-bottom:32px;
+    padding:24px;
+    background:var(--black-coal);
+    border-left:3px solid var(--orange-intense);
+  }
+  .modal-info .label{
+    font-family:var(--body-condensed);
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--white-stone);
+    margin-bottom:6px;
+    opacity:.7;
+  }
+  .modal-info .val{
+    font-family:var(--display);
+    font-size:24px;
+    color:var(--white-pure);
+    letter-spacing:1px;
+  }
+  .modal-gallery{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:12px;margin-bottom:32px;
+  }
+  .gallery-shot{
+    aspect-ratio:4/3;
+    border:1px solid rgba(255,255,255,.06);
+    position:relative;overflow:hidden;
+    cursor:pointer;
+    transition:transform .3s ease;
+  }
+  .gallery-shot:hover{transform:scale(1.03)}
+  .gallery-shot::after{
+    content:"360°";
+    position:absolute;bottom:8px;right:10px;
+    font-family:var(--display);
+    color:var(--white-pure);
+    letter-spacing:1px;
+    font-size:14px;
+    text-shadow:0 2px 8px rgba(0,0,0,.8);
+  }
+  .gallery-shot.a{
+    background:
+      radial-gradient(ellipse at 20% 30%, var(--orange-amber), transparent 60%),
+      radial-gradient(ellipse at 70% 80%, var(--orange-burnt), transparent 55%),
+      var(--black-smoke);
+  }
+  .gallery-shot.b{
+    background:
+      radial-gradient(ellipse at 80% 20%, var(--orange-intense), transparent 55%),
+      radial-gradient(ellipse at 20% 80%, var(--orange-deep), transparent 60%),
+      var(--black-void);
+  }
+  .gallery-shot.c{
+    background:
+      radial-gradient(ellipse at 50% 50%, var(--orange-vibrant), transparent 50%),
+      linear-gradient(135deg, var(--black-carbon), var(--black-smoke));
+  }
+
+  .modal-contact{
+    padding-top:24px;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+  .modal-contact h4{
+    font-family:var(--display);
+    letter-spacing:3px;
+    font-size:18px;
+    text-transform:uppercase;
+    color:var(--orange-intense);
+    margin-bottom:14px;
+  }
+  .contact-row{
+    display:flex;gap:14px;align-items:center;
+    font-family:var(--body);
+    color:var(--white-stone);
+    margin-bottom:10px;
+    font-size:15px;
+  }
+  .contact-row svg{color:var(--orange-intense);flex-shrink:0}
+
+  @media (max-width:700px){
+    .modal-header{padding:28px 22px 20px;gap:16px;flex-wrap:wrap}
+    .modal-avatar{width:64px;height:64px}
+    .modal-body{padding:24px 22px}
+    .modal-info{grid-template-columns:1fr;gap:14px;padding:18px}
+    .modal-gallery{grid-template-columns:1fr}
+  }
+
+  /* =========================================================
+     CONTACTO / PROCESO
+     ========================================================= */
+  .contact{
+    background:var(--black-void);
+    padding:120px 40px;
+    position:relative;
+    overflow:hidden;
+  }
+  .contact-bolt{
+    position:absolute;
+    right:-120px;top:80px;
+    width:500px;height:auto;
+    opacity:.05;
+    transform:rotate(20deg);
+    pointer-events:none;
+  }
+
+  .process-steps{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:20px;
+    margin-bottom:100px;
+    position:relative;
+  }
+  .process-steps::before{
+    content:"";
+    position:absolute;
+    top:42px;left:8%;right:8%;
+    height:2px;
+    background:repeating-linear-gradient(90deg, var(--orange-intense) 0 12px, transparent 12px 22px);
+    opacity:.4;
+    z-index:0;
+  }
+  .step{
+    position:relative;
+    z-index:1;
+    text-align:left;
+    padding:24px 20px;
+    background:var(--black-coal);
+    border:1px solid rgba(255,255,255,.06);
+    transition:all .3s ease;
+  }
+  .step:hover{
+    border-color:var(--orange-intense);
+    transform:translateY(-4px);
+  }
+  .step-num{
+    font-family:var(--display);
+    font-size:56px;
+    line-height:1;
+    color:var(--orange-intense);
+    margin-bottom:14px;
+    display:inline-block;
+    padding:6px 16px;
+    background:var(--black-void);
+    border:1px solid rgba(255,61,0,.3);
+  }
+  .step-title{
+    font-family:var(--display);
+    font-size:22px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--white-pure);
+    margin-bottom:10px;
+    line-height:1.1;
+  }
+  .step-text{
+    font-size:14px;
+    color:var(--white-stone);
+  }
+
+  @media (max-width:900px){
+    .contact{padding:80px 20px}
+    .process-steps{grid-template-columns:repeat(2,1fr);gap:12px}
+    .process-steps::before{display:none}
+  }
+  @media (max-width:520px){
+    .process-steps{grid-template-columns:1fr}
+  }
+
+  /* Formulario */
+  .form-wrapper{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:60px;
+    align-items:start;
+  }
+  .form-side h3{
+    font-family:var(--display);
+    font-size:clamp(40px, 5vw, 72px);
+    line-height:.95;
+    letter-spacing:-.01em;
+    color:var(--white-pure);
+    margin-bottom:20px;
+    text-transform:uppercase;
+  }
+  .form-side h3 .mark{color:var(--orange-intense)}
+  .form-side p{
+    color:var(--white-stone);
+    font-size:16px;
+    margin-bottom:36px;
+    max-width:440px;
+  }
+  .contact-info-block{
+    background:var(--black-coal);
+    border:1px solid rgba(255,255,255,.06);
+    padding:26px;
+    margin-top:30px;
+  }
+  .contact-info-block .label{
+    font-family:var(--body-condensed);
+    font-size:11px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:var(--orange-amber);
+    margin-bottom:12px;
+  }
+  .contact-info-block a{
+    display:block;
+    color:var(--white-pure);
+    padding:8px 0;
+    font-size:16px;
+    transition:color .2s ease;
+    border-bottom:1px solid rgba(255,255,255,.05);
+  }
+  .contact-info-block a:last-child{border-bottom:0}
+  .contact-info-block a:hover{color:var(--orange-intense)}
+
+  form{
+    background:var(--black-coal);
+    border:1px solid rgba(255,255,255,.08);
+    padding:36px 32px;
+    position:relative;
+  }
+  form::before{
+    content:"";
+    position:absolute;top:0;left:0;
+    width:80px;height:3px;background:var(--orange-intense);
+  }
+  .field{margin-bottom:22px}
+  .field label{
+    display:block;
+    font-family:var(--body-condensed);
+    font-weight:600;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--white-stone);
+    margin-bottom:8px;
+  }
+  .field input,
+  .field textarea,
+  .field select{
+    width:100%;
+    background:transparent;
+    border:none;
+    border-bottom:1.5px solid rgba(255,255,255,.15);
+    padding:12px 0;
+    color:var(--white-pure);
+    font-size:16px;
+    font-family:var(--body);
+    transition:border-color .2s ease;
+    border-radius:0;
+  }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus{
+    outline:none;
+    border-bottom-color:var(--orange-intense);
+  }
+  .field textarea{
+    min-height:110px;resize:vertical;
+    font-family:var(--body);
+  }
+  .field-row{
+    display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:end;
+  }
+  .field-row select{
+    background:var(--black-coal);
+    color:var(--white-pure);
+    padding:12px 8px;
+  }
+  .submit-btn{
+    width:100%;
+    font-family:var(--display);
+    letter-spacing:3px;
+    font-size:15px;
+    padding:18px;
+    background:var(--orange-intense);
+    color:var(--black-void);
+    text-transform:uppercase;
+    position:relative;overflow:hidden;
+    margin-top:14px;
+    transition:transform .25s ease;
+  }
+  .submit-btn:hover{
+    background:var(--orange-amber);
+    transform:translateY(-2px);
+  }
+  .form-success{
+    display:none;
+    padding:20px;
+    background:rgba(181,255,61,.08);
+    border:1px solid var(--lime);
+    color:var(--lime);
+    margin-top:20px;
+    font-family:var(--body-condensed);
+    font-weight:500;
+    letter-spacing:1px;
+    text-align:center;
+  }
+  .form-success.show{display:block;animation:slide-in .4s ease}
+  @keyframes slide-in{
+    from{opacity:0;transform:translateY(12px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  @media (max-width:900px){
+    .form-wrapper{grid-template-columns:1fr;gap:40px}
+  }
+
+  /* WhatsApp flotante */
+  .whatsapp-float{
+    position:fixed;
+    bottom:24px;right:24px;
+    width:60px;height:60px;
+    background:#25D366;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 24px rgba(37,211,102,.4);
+    z-index:900;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .whatsapp-float:hover{
+    transform:scale(1.1);
+    box-shadow:0 10px 30px rgba(37,211,102,.6);
+  }
+  .whatsapp-float::after{
+    content:"";
+    position:absolute;inset:-4px;
+    border-radius:50%;
+    border:2px solid #25D366;
+    animation:ripple 2s ease-out infinite;
+  }
+  @keyframes ripple{
+    0%{transform:scale(1);opacity:1}
+    100%{transform:scale(1.4);opacity:0}
+  }
+  .whatsapp-float svg{width:30px;height:30px;color:white}
+
+  /* =========================================================
+     FOOTER
+     ========================================================= */
+  footer{
+    background:var(--black-void);
+    padding:80px 40px 30px;
+    position:relative;
+    overflow:hidden;
+    border-top:2px solid var(--orange-intense);
+  }
+  .footer-bg-logo{
+    position:absolute;
+    left:50%;bottom:-60px;
+    transform:translateX(-50%);
+    height:320px;width:auto;
+    opacity:.06;
+    pointer-events:none;
+  }
+  .footer-bolt{
+    position:absolute;
+    right:40px;top:60px;
+    width:180px;height:auto;
+    opacity:.07;
+    transform:rotate(-12deg);
+    pointer-events:none;
+  }
+  .footer-inner{
+    max-width:1400px;margin:0 auto;
+    position:relative;z-index:2;
+  }
+  .footer-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:60px;
+    margin-bottom:60px;
+  }
+  .footer-brand img{
+    height:70px;width:auto;
+    margin-bottom:22px;
+  }
+  .footer-brand p{
+    color:var(--white-stone);
+    font-size:14px;
+    max-width:320px;
+    line-height:1.7;
+  }
+  .footer-col h5{
+    font-family:var(--display);
+    font-size:14px;
+    letter-spacing:3px;
+    color:var(--orange-intense);
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .footer-col a{
+    color:var(--white-stone);
+    font-size:14px;
+    transition:color .2s ease, padding-left .25s ease;
+  }
+  .footer-col a:hover{color:var(--orange-intense);padding-left:6px}
+
+  .footer-bottom{
+    border-top:1px solid rgba(255,255,255,.06);
+    padding-top:26px;
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:16px;
+    font-family:var(--body-condensed);
+    font-size:12px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--white-stone);
+  }
+  .footer-bottom .dot{color:var(--orange-intense);margin:0 8px}
+
+  @media (max-width:900px){
+    footer{padding:60px 20px 24px}
+    .footer-grid{grid-template-columns:1fr;gap:40px}
+    .footer-bg-logo{height:200px}
+  }
+
+  /* =========================================================
+     REVEAL ANIMATIONS
+     ========================================================= */
+  .reveal{
+    opacity:0;
+    transform:translateY(36px);
+    transition:opacity .8s cubic-bezier(.22,1,.36,1), transform .8s cubic-bezier(.22,1,.36,1);
+  }
+  .reveal.visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+  .reveal.delay-1{transition-delay:.1s}
+  .reveal.delay-2{transition-delay:.2s}
+  .reveal.delay-3{transition-delay:.3s}
+  .reveal.delay-4{transition-delay:.4s}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation-duration:.01ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.01ms !important;
+    }
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- Cursor personalizado -->
+<div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+<nav class="navbar" id="navbar">
+  <a href="#inicio" class="nav-logo" aria-label="Flesh Studio Inicio">
+    <img src="Logos_flesh2.png" alt="Flesh Studio" />
+  </a>
+  <ul class="nav-links">
+    <li><a href="#inicio" class="nav-link active" data-section="inicio">Inicio</a></li>
+    <li><a href="#perfiles" class="nav-link" data-section="perfiles">Perfiles</a></li>
+    <li><a href="#contacto" class="nav-link" data-section="contacto">Contacto</a></li>
+  </ul>
+  <a href="#contacto" class="nav-cta">Publicá Tu Terreno</a>
+  <button class="hamburger" id="hamburger" aria-label="Abrir menú" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-backdrop" id="mobileBackdrop"></div>
+<aside class="mobile-panel" id="mobilePanel" aria-hidden="true">
+  <a href="#inicio" class="mobile-link">Inicio</a>
+  <a href="#perfiles" class="mobile-link">Perfiles</a>
+  <a href="#contacto" class="mobile-link">Contacto</a>
+  <a href="#contacto" class="nav-cta">Publicar Terreno</a>
+  <img src="Logos_principales__1_.png" alt="Flesh Studio logo" class="mobile-mark" />
+</aside>
+
+<!-- =========================================================
+     HERO — INICIO
+     ========================================================= -->
+<section id="inicio" class="hero">
+  <img src="Logos_principales__2_.png" alt="" class="hero-bolt" aria-hidden="true" />
+  <img src="Logos_principales__2_.png" alt="" class="hero-bolt-2" aria-hidden="true" />
+
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <span class="hero-eyebrow reveal">
+        <span class="pulse-dot"></span> Estudio activo · Disponible
+      </span>
+      <h1 class="hero-title reveal delay-1">
+        <span class="accent">FLESH</span><br>
+        STUDIO<span class="slash">/</span>
+      </h1>
+      <p class="hero-subtitle reveal delay-2">
+        Terrenos en <strong>360°</strong>. Cada metro, real. Recorremos tu propiedad con cámaras inmersivas y publicamos un perfil que tus compradores pueden explorar como si estuvieran caminándolo.
+      </p>
+      <div class="hero-actions reveal delay-3">
+        <a href="#perfiles" class="btn-primary">
+          Ver Perfiles
+          <span class="arrow">→</span>
+        </a>
+        <a href="#contacto" class="btn-outline">Publicar Terreno</a>
+      </div>
+    </div>
+
+    <div class="hero-viewer-wrap reveal delay-2">
+      <div class="hero-viewer" role="img" aria-label="Visualizador 360 grados">
+        <div class="viewer-rings" aria-hidden="true"></div>
+        <div class="viewer-content">
+          <div class="viewer-360">360°</div>
+          <div class="viewer-label">Experiencia Inmersiva</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>Terrenos en 360°</span>
+      <span>Cada metro, real</span>
+      <span>Recorrido inmersivo</span>
+      <span>Perfiles verificados</span>
+      <span>Grabado in-situ</span>
+      <span>Sin viajes innecesarios</span>
+      <span>Terrenos en 360°</span>
+      <span>Cada metro, real</span>
+      <span>Recorrido inmersivo</span>
+      <span>Perfiles verificados</span>
+      <span>Grabado in-situ</span>
+      <span>Sin viajes innecesarios</span>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     ¿QUÉ ES FLESH?
+     ========================================================= -->
+<section class="section what-is">
+  <img src="Logos_principales__2_.png" alt="" class="section-bolt left" aria-hidden="true" />
+  <div class="section-inner">
+    <header class="section-header reveal">
+      <div class="section-kicker">Cómo funciona</div>
+      <h2 class="section-title">¿Qué es <span class="mark">Flesh</span>?</h2>
+      <p class="section-lead">Un estudio que convierte propiedades rurales, lotes y terrenos en experiencias digitales inmersivas. Documentamos cada rincón para que ningún comprador tenga dudas.</p>
+    </header>
+
+    <div class="what-grid">
+      <article class="what-card reveal">
+        <div class="what-number">01</div>
+        <svg class="what-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="8" y="18" width="40" height="32" rx="3"/>
+          <path d="M48 28l10-6v20l-10-6z"/>
+          <circle cx="24" cy="34" r="7"/>
+        </svg>
+        <h3 class="what-title">Grabamos tu terreno</h3>
+        <p class="what-text">Nuestro equipo visita tu propiedad con cámaras 360° profesionales. Documentamos cada rincón con precisión quirúrgica.</p>
+      </article>
+
+      <article class="what-card reveal delay-1">
+        <div class="what-number">02</div>
+        <svg class="what-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M32 6c-10 0-18 8-18 18 0 14 18 34 18 34s18-20 18-34c0-10-8-18-18-18z"/>
+          <circle cx="32" cy="24" r="6"/>
+        </svg>
+        <h3 class="what-title">Publicamos tu perfil</h3>
+        <p class="what-text">Creamos una ficha completa dentro de nuestro sitio, con datos técnicos, ubicación y recorrido interactivo.</p>
+      </article>
+
+      <article class="what-card reveal delay-2">
+        <div class="what-number">03</div>
+        <svg class="what-icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 32C12 18 22 12 32 12s20 6 28 20c-8 14-18 20-28 20S12 46 4 32z"/>
+          <circle cx="32" cy="32" r="8"/>
+        </svg>
+        <h3 class="what-title">Tu comprador lo ve todo</h3>
+        <p class="what-text">Vista inmersiva 360°, sin sorpresas, sin viajes innecesarios. Tu terreno disponible las 24 horas.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     PREVIEW PROPIEDADES
+     ========================================================= -->
+<section class="section">
+  <div class="section-inner">
+    <header class="section-header reveal">
+      <div class="section-kicker">Propiedades disponibles</div>
+      <h2 class="section-title">Terrenos <span class="mark">destacados</span></h2>
+      <p class="section-lead">Una selección de perfiles activos en Flesh. Cada uno con su propio recorrido 360° grabado por nuestro equipo.</p>
+    </header>
+
+    <div class="preview-grid">
+      <a href="#perfiles" class="preview-card big reveal">
+        <img src="https://picsum.photos/seed/terreno1/1000/1400" alt="Terreno en Córdoba" loading="lazy" />
+        <div class="preview-content">
+          <span class="preview-badge">1.200 m²</span>
+          <h3 class="preview-title">Perfil: Carlos M.</h3>
+          <p class="preview-meta">Córdoba · Argentina</p>
+          <span class="preview-link">Ver perfil <span>→</span></span>
+        </div>
+      </a>
+
+      <a href="#perfiles" class="preview-card reveal delay-1">
+        <img src="https://picsum.photos/seed/terreno2/800/600" alt="Terreno en Mendoza" loading="lazy" />
+        <div class="preview-content">
+          <span class="preview-badge">850 m²</span>
+          <h3 class="preview-title">Perfil: Luciana F.</h3>
+          <p class="preview-meta">Mendoza</p>
+          <span class="preview-link">Ver perfil <span>→</span></span>
+        </div>
+      </a>
+
+      <a href="#perfiles" class="preview-card reveal delay-2">
+        <img src="https://picsum.photos/seed/terreno3/800/600" alt="Terreno en San Luis" loading="lazy" />
+        <div class="preview-content">
+          <span class="preview-badge">5.000 m²</span>
+          <h3 class="preview-title">Perfil: Diego S.</h3>
+          <p class="preview-meta">San Luis</p>
+          <span class="preview-link">Ver perfil <span>→</span></span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     ESTADÍSTICAS
+     ========================================================= -->
+<section class="stats">
+  <div class="stats-grid">
+    <div class="stat reveal">
+      <div class="stat-num" data-target="12" data-suffix="+">0</div>
+      <div class="stat-label">Perfiles publicados</div>
+    </div>
+    <div class="stat reveal delay-1">
+      <div class="stat-num" data-target="360" data-suffix="°">0</div>
+      <div class="stat-label">Visualización garantizada</div>
+    </div>
+    <div class="stat reveal delay-2">
+      <div class="stat-num" data-target="100" data-suffix="%">0</div>
+      <div class="stat-label">Terrenos verificados in-situ</div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     PERFILES
+     ========================================================= -->
+<section id="perfiles" class="profiles">
+  <div class="section-inner">
+    <img src="Logos_principales__2_.png" alt="" class="section-bolt right" aria-hidden="true" />
+    <header class="section-header reveal">
+      <div class="section-kicker">Perfiles de vendedores</div>
+      <h2 class="section-title">Explorá <span class="mark">cada terreno</span> como si estuvieras ahí.</h2>
+    </header>
+
+    <div class="filters reveal" role="tablist">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn" data-filter="available">Disponibles</button>
+      <button class="filter-btn" data-filter="reserved">Reservados</button>
+    </div>
+
+    <div class="profiles-grid" id="profilesGrid">
+      <!-- Perfiles se insertan con JS -->
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     MODAL
+     ========================================================= -->
+<div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalName">
+    <button class="modal-close" id="modalClose" aria-label="Cerrar modal">✕</button>
+    <div class="modal-header">
+      <img id="modalAvatar" src="" alt="" class="modal-avatar" />
+      <div>
+        <h2 id="modalName"></h2>
+        <div class="loc" id="modalLoc"></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p id="modalDesc"></p>
+
+      <div class="modal-info">
+        <div><div class="label">Superficie</div><div class="val" id="modalSurface"></div></div>
+        <div><div class="label">Precio</div><div class="val" id="modalPrice"></div></div>
+        <div><div class="label">Estado</div><div class="val" id="modalStatus"></div></div>
+      </div>
+
+      <div class="modal-gallery">
+        <div class="gallery-shot a" role="img" aria-label="Captura 360 grados 1"></div>
+        <div class="gallery-shot b" role="img" aria-label="Captura 360 grados 2"></div>
+        <div class="gallery-shot c" role="img" aria-label="Captura 360 grados 3"></div>
+      </div>
+
+      <div class="modal-contact">
+        <h4>Contactar al vendedor</h4>
+        <div class="contact-row">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13 1 .37 1.97.72 2.9a2 2 0 0 1-.45 2.11L8.09 10.91a16 16 0 0 0 6 6l2.18-2.18a2 2 0 0 1 2.11-.45c.93.35 1.9.59 2.9.72A2 2 0 0 1 22 16.92z"/></svg>
+          <span id="modalPhone"></span>
+        </div>
+        <div class="contact-row">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span id="modalEmail"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     CONTACTO
+     ========================================================= -->
+<section id="contacto" class="contact">
+  <img src="Logos_principales__2_.png" alt="" class="contact-bolt" aria-hidden="true" />
+  <div class="section-inner">
+    <header class="section-header reveal">
+      <div class="section-kicker">Publicá tu terreno</div>
+      <h2 class="section-title">Visitamos. <span class="mark">Grabamos.</span> Publicamos.</h2>
+      <p class="section-lead">Gratis para vos, potente para tus compradores. Solo necesitamos algunos datos para coordinar la visita.</p>
+    </header>
+
+    <div class="process-steps reveal">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h4 class="step-title">Completá el formulario</h4>
+        <p class="step-text">Nos contás sobre tu terreno.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <h4 class="step-title">Coordinamos la visita</h4>
+        <p class="step-text">Nuestro equipo va con las cámaras.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <h4 class="step-title">Grabamos en 360°</h4>
+        <p class="step-text">Documentamos cada rincón del terreno.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">04</span>
+        <h4 class="step-title">Publicamos tu perfil</h4>
+        <p class="step-text">Tu ficha queda activa en Flesh.</p>
+      </div>
+    </div>
+
+    <div class="form-wrapper">
+      <div class="form-side reveal">
+        <h3>Quiero <span class="mark">publicar</span> mi terreno</h3>
+        <p>Completá los datos y nos ponemos en contacto en menos de 24 horas para coordinar la visita de grabación.</p>
+
+        <div class="contact-info-block">
+          <div class="label">Contacto directo</div>
+          <a href="mailto:contacto@fleshestudio.com">contacto@fleshestudio.com</a>
+          <a href="https://instagram.com/flesh.estudio" target="_blank" rel="noopener">@flesh.estudio</a>
+          <a href="https://wa.me/5493413000000" target="_blank" rel="noopener">+54 9 341 300 0000</a>
+        </div>
+      </div>
+
+      <form id="contactForm" class="reveal delay-1" novalidate>
+        <div class="field">
+          <label for="fname">Nombre completo</label>
+          <input type="text" id="fname" name="fname" required autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="femail">Email</label>
+          <input type="email" id="femail" name="femail" required autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="fphone">Teléfono</label>
+          <input type="tel" id="fphone" name="fphone" required autocomplete="tel" />
+        </div>
+        <div class="field">
+          <label for="floc">Provincia / Localidad</label>
+          <input type="text" id="floc" name="floc" required />
+        </div>
+        <div class="field">
+          <label>Superficie estimada</label>
+          <div class="field-row">
+            <input type="number" id="fsurface" name="fsurface" min="1" placeholder="Ej: 1200" required />
+            <select id="funit" name="funit" aria-label="Unidad de superficie">
+              <option value="m²">m²</option>
+              <option value="ha">ha</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="fmessage">Mensaje / Descripción</label>
+          <textarea id="fmessage" name="fmessage" placeholder="Contanos sobre tu terreno..."></textarea>
+        </div>
+        <button type="submit" class="submit-btn">Quiero Publicar Mi Terreno</button>
+        <div class="form-success" id="formSuccess">
+          ✓ ¡Recibimos tu consulta! Te contactamos en menos de 24 hs.
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- WhatsApp flotante -->
+<a href="https://wa.me/5493413000000" target="_blank" rel="noopener" class="whatsapp-float" aria-label="Contactar por WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+  </svg>
+</a>
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+<footer>
+  <img src="Logos_flesh.png" alt="" class="footer-bg-logo" aria-hidden="true" />
+  <img src="Logos_principales__2_.png" alt="" class="footer-bolt" aria-hidden="true" />
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="Logos_flesh2.png" alt="Flesh Studio" />
+        <p>Terrenos en 360°. Grabamos tu propiedad y creamos perfiles inmersivos para que tus compradores la exploren sin moverse.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Navegación</h5>
+        <ul>
+          <li><a href="#inicio">Inicio</a></li>
+          <li><a href="#perfiles">Perfiles</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Contacto</h5>
+        <ul>
+          <li><a href="mailto:contacto@fleshestudio.com">contacto@fleshestudio.com</a></li>
+          <li><a href="https://instagram.com/flesh.estudio" target="_blank" rel="noopener">@flesh.estudio</a></li>
+          <li><a href="https://wa.me/5493413000000" target="_blank" rel="noopener">WhatsApp</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Flesh Studio <span class="dot">◆</span> Todos los derechos reservados.</span>
+      <span>Hecho con precisión <span class="dot">◆</span> Rosario · Argentina</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+const profilesData = [
+  {
+    id:1, name:"Martín Albornoz", loc:"Rosario, Santa Fe", surface:"2.400 m²",
+    price:"USD 58.000", status:"available", avatar:12,
+    desc:"Terreno ubicado en zona periurbana de Rosario, a 15 minutos del centro. Servicios disponibles (luz, agua, gas cerca). Ideal para proyecto residencial o quinta. Escritura en regla, con mensura actualizada y plano aprobado.",
+    phone:"+54 9 341 555-1234", email:"martin.albornoz@mail.com"
+  },
+  {
+    id:2, name:"Luciana Ferreyra", loc:"Córdoba Capital", surface:"850 m²",
+    price:"A consultar", status:"available", avatar:5,
+    desc:"Lote urbano en barrio tradicional de Córdoba. Excelente ubicación, cerca de colegios y centros comerciales. Todos los servicios. Cimiento iniciado. Perfecto para construcción de vivienda unifamiliar.",
+    phone:"+54 9 351 555-7788", email:"lu.ferreyra@mail.com"
+  },
+  {
+    id:3, name:"Diego Sánchez", loc:"Mendoza", surface:"5.000 m²",
+    price:"USD 120.000", status:"reserved", avatar:33,
+    desc:"Campo con viñedo productivo en Maipú. 3 hectáreas aproximadas con cepas malbec y cabernet. Casco en excelente estado. Sistema de riego por goteo. Acceso asfaltado.",
+    phone:"+54 9 261 555-4422", email:"diego.sanchez@mail.com"
+  },
+  {
+    id:4, name:"Valeria Moreno", loc:"Buenos Aires, GBA Norte", surface:"1.200 m²",
+    price:"USD 32.000", status:"available", avatar:47,
+    desc:"Terreno en barrio cerrado de zona norte. Amenities completos: pileta, cancha de tenis, gimnasio, seguridad 24hs. Lote interno con vista al lago. Escritura lista para transferir.",
+    phone:"+54 9 11 5555-9087", email:"valeria.moreno@mail.com"
+  },
+  {
+    id:5, name:"Tomás Guzmán", loc:"San Luis", surface:"10.000 m²",
+    price:"USD 85.000", status:"available", avatar:60,
+    desc:"Campo de 1 hectárea en las sierras puntanas. Vista panorámica, arroyo propio, arbolado añejo. Acceso por camino vecinal consolidado. Ideal para turismo rural o retiro personal.",
+    phone:"+54 9 266 555-1190", email:"tomas.guzman@mail.com"
+  },
+  {
+    id:6, name:"Romina Paz", loc:"Tucumán", surface:"3.600 m²",
+    price:"A consultar", status:"reserved", avatar:20,
+    desc:"Terreno agrícola con plantación cítrica en Famaillá. Ubicación estratégica cerca de ruta nacional. Con pozo de agua propio y galpón para maquinaria. Producción activa.",
+    phone:"+54 9 381 555-3366", email:"romina.paz@mail.com"
+  }
+];
+
+/* =========================================================
+   RENDER PROFILES
+   ========================================================= */
+const grid = document.getElementById("profilesGrid");
+const statusLabels = { available:"Disponible", reserved:"Reservado" };
+
+function renderProfiles(){
+  grid.innerHTML = profilesData.map(p => `
+    <article class="profile-card" data-status="${p.status}">
+      <div class="profile-viewer">
+        <div class="dots"></div>
+        <div class="viewer-icon-360" aria-hidden="true">
+          <svg viewBox="0 0 80 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="40" cy="20" rx="36" ry="14" stroke="white" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <text x="40" y="26" text-anchor="middle" font-family="Anton,sans-serif" font-size="18" fill="white" letter-spacing="2">360°</text>
+          </svg>
+        </div>
+        <span class="status-badge ${p.status}">${statusLabels[p.status]}</span>
+        <img src="Logos_principales__1_.png" alt="Flesh Studio" class="profile-watermark" />
+      </div>
+      <div class="profile-body">
+        <div class="profile-head">
+          <img src="https://i.pravatar.cc/150?img=${p.avatar}" alt="${p.name}" class="profile-avatar" loading="lazy"/>
+          <div class="profile-identity">
+            <h3>${p.name}</h3>
+            <div class="loc">${p.loc}</div>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <div class="label">Superficie</div>
+            <div class="value">${p.surface}</div>
+          </div>
+          <div class="profile-stat">
+            <div class="label">Precio</div>
+            <div class="value">${p.price}</div>
+          </div>
+        </div>
+        <button class="profile-cta" data-id="${p.id}" aria-label="Ver terreno completo de ${p.name}">
+          Ver terreno completo
+          <span class="arrow">→</span>
+        </button>
+      </div>
+    </article>
+  `).join("");
+  bindProfileCards();
+}
+
+function bindProfileCards(){
+  document.querySelectorAll(".profile-cta").forEach(btn => {
+    btn.addEventListener("click", () => openModal(+btn.dataset.id));
+  });
+}
+
+renderProfiles();
+
+/* =========================================================
+   FILTERS
+   ========================================================= */
+const filterBtns = document.querySelectorAll(".filter-btn");
+filterBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    filterBtns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const f = btn.dataset.filter;
+    document.querySelectorAll(".profile-card").forEach(card => {
+      const show = (f === "all") || (card.dataset.status === f);
+      card.classList.toggle("hidden", !show);
+    });
+  });
+});
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+const modal = document.getElementById("modalBackdrop");
+const modalClose = document.getElementById("modalClose");
+
+function openModal(id){
+  const p = profilesData.find(x => x.id === id);
+  if(!p) return;
+  document.getElementById("modalAvatar").src = `https://i.pravatar.cc/300?img=${p.avatar}`;
+  document.getElementById("modalAvatar").alt = p.name;
+  document.getElementById("modalName").textContent = p.name;
+  document.getElementById("modalLoc").textContent = p.loc;
+  document.getElementById("modalDesc").textContent = p.desc;
+  document.getElementById("modalSurface").textContent = p.surface;
+  document.getElementById("modalPrice").textContent = p.price;
+  document.getElementById("modalStatus").textContent = statusLabels[p.status];
+  document.getElementById("modalPhone").textContent = p.phone;
+  document.getElementById("modalEmail").textContent = p.email;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeModal(){
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+modalClose.addEventListener("click", closeModal);
+modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+
+/* =========================================================
+   NAVBAR SCROLL
+   ========================================================= */
+const navbar = document.getElementById("navbar");
+window.addEventListener("scroll", () => {
+  navbar.classList.toggle("scrolled", window.scrollY > 80);
+});
+
+/* =========================================================
+   NAV ACTIVE SECTION (IntersectionObserver)
+   ========================================================= */
+const sections = document.querySelectorAll("section[id]");
+const navLinks = document.querySelectorAll(".nav-link");
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      navLinks.forEach(a => {
+        a.classList.toggle("active", a.dataset.section === entry.target.id);
+      });
+    }
+  });
+},{ rootMargin:"-40% 0px -55% 0px", threshold:0 });
+sections.forEach(s => sectionObserver.observe(s));
+
+/* =========================================================
+   MOBILE MENU
+   ========================================================= */
+const hamburger = document.getElementById("hamburger");
+const mobilePanel = document.getElementById("mobilePanel");
+const mobileBackdrop = document.getElementById("mobileBackdrop");
+
+function toggleMobile(force){
+  const open = force !== undefined ? force : !mobilePanel.classList.contains("open");
+  mobilePanel.classList.toggle("open", open);
+  mobileBackdrop.classList.toggle("open", open);
+  hamburger.classList.toggle("open", open);
+  hamburger.setAttribute("aria-expanded", String(open));
+  mobilePanel.setAttribute("aria-hidden", String(!open));
+  document.body.style.overflow = open ? "hidden" : "";
+}
+hamburger.addEventListener("click", () => toggleMobile());
+mobileBackdrop.addEventListener("click", () => toggleMobile(false));
+mobilePanel.querySelectorAll("a").forEach(a => a.addEventListener("click", () => toggleMobile(false)));
+
+/* =========================================================
+   REVEAL ON SCROLL
+   ========================================================= */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add("visible");
+      revealObserver.unobserve(entry.target);
+    }
+  });
+},{ threshold:0.12, rootMargin:"0px 0px -50px 0px" });
+
+document.querySelectorAll(".reveal").forEach(el => revealObserver.observe(el));
+
+/* =========================================================
+   ANIMATED COUNTERS
+   ========================================================= */
+const counters = document.querySelectorAll(".stat-num");
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      animateCounter(entry.target);
+      counterObserver.unobserve(entry.target);
+    }
+  });
+},{ threshold:0.5 });
+
+function animateCounter(el){
+  const target = +el.dataset.target;
+  const suffix = el.dataset.suffix || "";
+  const duration = 1600;
+  const start = performance.now();
+  function tick(now){
+    const p = Math.min((now - start)/duration, 1);
+    // easeOutExpo
+    const eased = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
+    el.textContent = Math.floor(target * eased) + suffix;
+    if(p < 1) requestAnimationFrame(tick);
+    else el.textContent = target + suffix;
+  }
+  requestAnimationFrame(tick);
+}
+counters.forEach(c => counterObserver.observe(c));
+
+/* =========================================================
+   FORM SUBMIT
+   ========================================================= */
+const form = document.getElementById("contactForm");
+const formSuccess = document.getElementById("formSuccess");
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  // Validación simple
+  const requiredFields = ["fname","femail","fphone","floc","fsurface"];
+  let valid = true;
+  requiredFields.forEach(name => {
+    const f = form.elements[name];
+    if(!f.value.trim()){
+      f.style.borderBottomColor = "var(--orange-intense)";
+      valid = false;
+    } else {
+      f.style.borderBottomColor = "";
+    }
+  });
+  if(!valid) return;
+
+  formSuccess.classList.add("show");
+  form.reset();
+  setTimeout(() => {
+    formSuccess.classList.remove("show");
+  }, 6000);
+});
+
+/* =========================================================
+   CUSTOM CURSOR
+   ========================================================= */
+const cursorDot = document.getElementById("cursorDot");
+const cursorRing = document.getElementById("cursorRing");
+let mouseX = 0, mouseY = 0;
+let ringX = 0, ringY = 0;
+
+window.addEventListener("mousemove", (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  cursorDot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%,-50%)`;
+});
+
+function animateRing(){
+  ringX += (mouseX - ringX) * 0.18;
+  ringY += (mouseY - ringY) * 0.18;
+  cursorRing.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%,-50%)`;
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+const hoverTargets = 'a, button, .profile-card, .preview-card, .filter-btn, input, textarea, select, .what-card, .step';
+document.querySelectorAll(hoverTargets).forEach(el => {
+  el.addEventListener("mouseenter", () => document.body.classList.add("cursor-hover"));
+  el.addEventListener("mouseleave", () => document.body.classList.remove("cursor-hover"));
+});
+
+/* =========================================================
+   SMOOTH SCROLL (fallback para navegadores sin scroll-behavior)
+   ========================================================= */
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener("click", (e) => {
+    const target = document.querySelector(link.getAttribute("href"));
+    if(target){
+      e.preventDefault();
+      const offset = 70;
+      const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top, behavior:"smooth" });
+    }
+  });
+});
+</script>
+
+</body>
+</html>
